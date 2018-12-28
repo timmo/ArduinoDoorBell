@@ -1,51 +1,52 @@
 #include <FastLED.h>
+#include <Bounce2.h>
 
+// hardware connections
+#define LED_DATA_PIN 11
+#define BUTTON_PIN 2
+
+// FastLED
 #define NUM_LEDS 3
-#define DATA_PIN 11
 #define LED_TYPE WS2812B
-
-CRGB leds[NUM_LEDS];
-#define BRIGHTNESS          96
 #define FRAMES_PER_SECOND  60
+CRGB leds[NUM_LEDS];
 
-static uint8_t brightness = 0;
-static uint8_t direction = 1;
+// Button
+Bounce button = Bounce();
+const int BUTTON_DEBOUNCE_MILLIS = 50;
 
 void setup() { 
   delay(1000); // delay for recovery
-  
-  FastLED.addLeds<LED_TYPE, DATA_PIN>(leds, NUM_LEDS);
 
-  // set master brightness control
-  FastLED.setBrightness(BRIGHTNESS);
+  // button debouncing  
+  button.attach(BUTTON_PIN,INPUT_PULLUP);
+  button.interval(BUTTON_DEBOUNCE_MILLIS);
   
+  // led setup
+  FastLED.addLeds<LED_TYPE, LED_DATA_PIN>(leds, NUM_LEDS);
   for(int l = 0; l < NUM_LEDS; l++) { 
-    leds[l] = CHSV( HUE_YELLOW, 255, 255);
+    leds[l] = CHSV( 45, 255, 170);
   }
+  FastLED.show();
 }
 
 void loop() { 
-//      for(int dot = 0; dot < NUM_LEDS; dot++) { 
-//            leds[dot] = CRGB::Blue;
-//            FastLED.show();
-//            // clear this led for the next time around the loop
-//            leds[dot] = CRGB::Black;
-//            delay(500);
-//        }
-      
-      if (brightness == 255) 
-        direction = -1;
-      else if (brightness == 0) 
-        direction = 1;
 
-      brightness = brightness + (direction * 1);
+  button.update();  
 
-      CHSV hsv = CHSV( 64, 255, brightness);
-      
-      for(int l = 0; l < NUM_LEDS; l++) { 
-//            leds[l].fadeLightBy( brightness );
-          leds[l] = hsv;
-        }
-      FastLED.delay(20);
-      
+  // button press
+  if (button.fell()) {
+    for(int l = 0; l < NUM_LEDS; l++) { 
+      leds[l] = CHSV( 65, 255, 255);
+    }
+    FastLED.show();
+  }
+
+  // button released
+  if (button.rose()) {
+    for(int l = 0; l < NUM_LEDS; l++) { 
+      leds[l] = CHSV( 45, 255, 170);
+    }
+    FastLED.show();
+  }
 }
